@@ -49,7 +49,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'rest-client', '= 2.0.2'
   spec.add_runtime_dependency 'ruby-progressbar', '~> 1.0'
   spec.add_runtime_dependency 'ruby_rncryptor', '~> 3.0'
-  spec.add_runtime_dependency 'rubyzip', '~> 2.0'
+  spec.add_runtime_dependency 'rubyzip', '~> 1.3'
   spec.add_runtime_dependency 'sorbet-runtime', '~> 0.5'
   spec.add_runtime_dependency 'thor', '~> 1.0'
   spec.add_runtime_dependency 'webrick', '~> 1.0'
