@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'jwt', '= 1.5.6'
   spec.add_runtime_dependency 'launchy', '~> 2.0'
   spec.add_runtime_dependency 'net-http-digest_auth', '= 1.4.0'
-  spec.add_runtime_dependency 'nokogiri', '= 1.10.10'
+  spec.add_runtime_dependency 'nokogiri', '= 1.13.7'
   spec.add_runtime_dependency 'oauth2', '~> 1.0'
   spec.add_runtime_dependency 'rack', '~> 2.0'
   spec.add_runtime_dependency 'rails-html-sanitizer', '= 1.4.3'
