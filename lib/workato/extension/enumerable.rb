@@ -18,7 +18,7 @@ module Enumerable
     end
 
     map do |val|
-      format % (Array(val).map { |v| v.is_a?(HashWithIndifferentAccess) ? v.symbolize_keys : v })
+      format % (Array.wrap(val).map { |v| v.is_a?(HashWithIndifferentAccess) ? v.symbolize_keys : v })
     end
   end
 
@@ -45,12 +45,10 @@ module Enumerable
     nil
   end
 
-  private
-
   def transform_select(&block)
     map do |*items|
       result = block.call(*items)
       result || nil
-    end.reject(&:nil?)
+    end.compact
   end
 end

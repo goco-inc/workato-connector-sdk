@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 RSpec.describe 'authorized_connection', :vcr do
@@ -20,8 +21,8 @@ RSpec.describe 'authorized_connection', :vcr do
   context 'when connection settings is invalid' do
     let(:connection_name) { 'My Invalid Connection' }
 
-    around(:each) do |example|
-      Workato::Connector::Sdk::Connection.on_settings_update = lambda { |_, &refresher|
+    around do |example|
+      Workato::Connector::Sdk::Connection.on_settings_update = lambda { |_, _, refresher|
         refresher.call.tap do |new_settings|
           expect(new_settings).to eq({ password: 'password', user: 'user' }.with_indifferent_access)
         end

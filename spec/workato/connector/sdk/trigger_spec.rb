@@ -1,8 +1,9 @@
+# typed: false
 # frozen_string_literal: true
 
 module Workato::Connector::Sdk
   RSpec.describe Trigger do
-    around(:each) do |example|
+    around do |example|
       Timecop.freeze { example.run }
     end
 
@@ -165,6 +166,25 @@ module Workato::Connector::Sdk
           recipe_id: recipe_id,
           subscribed: true
         }.with_indifferent_access)
+      end
+
+      context 'with expires_at' do
+        let(:trigger_definition) do
+          {
+            webhook_subscribe: lambda do
+              [{ subscribed: true }, 1.minute.from_now]
+            end
+          }
+        end
+
+        it 'returns result' do
+          output = trigger.webhook_subscribe
+
+          expect(output).to contain_exactly(
+            { subscribed: true }.with_indifferent_access,
+            a_kind_of(ActiveSupport::TimeWithZone)
+          )
+        end
       end
     end
 

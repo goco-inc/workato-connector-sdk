@@ -3,6 +3,8 @@
 
 require 'active_support/encrypted_configuration'
 
+using Workato::Extension::HashWithIndifferentAccess
+
 module Workato
   module Connector
     module Sdk
@@ -80,7 +82,7 @@ module Workato
 
         def read_plain_file
           all_settings = File.open(path) do |f|
-            YAML.safe_load(f.read, [::Symbol]).to_hash.with_indifferent_access
+            YAML.safe_load(f.read, permitted_classes: [::Symbol]).to_hash.with_indifferent_access
           end
 
           (name ? all_settings.fetch(name) : all_settings) || {}
@@ -98,13 +100,13 @@ module Workato
         end
 
         def read_encrypted_file
-          all_settings = encrypted_configuration.config.with_indifferent_access
+          all_settings = HashWithIndifferentAccess.wrap(encrypted_configuration.config)
 
           (name ? all_settings.fetch(name) : all_settings) || {}
         end
 
         def update_encrypted_file(new_settings)
-          all_settings = encrypted_configuration.config.with_indifferent_access
+          all_settings = HashWithIndifferentAccess.wrap(encrypted_configuration.config)
 
           merge_settings(all_settings, new_settings)
 
@@ -121,7 +123,7 @@ module Workato
         end
 
         def encrypted_configuration
-          @encrypted_configuration ||= ActiveSupport::EncryptedConfiguration.new(
+          @encrypted_configuration ||= FixedEncryptedConfiguration.new(
             config_path: path,
             key_path: key_path || DEFAULT_MASTER_KEY_PATH,
             env_key: DEFAULT_MASTER_KEY_ENV,
@@ -133,6 +135,17 @@ module Workato
           YAML.dump(settings.to_hash)
         end
       end
+
+      class FixedEncryptedConfiguration < ActiveSupport::EncryptedConfiguration
+        private
+
+        def handle_missing_key
+          # Original methods incorectly passes constructor params
+          raise MissingKeyError.new(key_path: key_path, env_key: env_key) if raise_if_missing_key
+        end
+      end
+
+      private_constant :FixedEncryptedConfiguration
     end
   end
 end

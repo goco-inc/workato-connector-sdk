@@ -6,17 +6,28 @@ jobs:
   rspec:
 
     runs-on: ubuntu-latest
+    env:
+      BUNDLE_WITH: test
+      BUNDLE_WITHOUT: development
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['2.4', '2.5', '2.7']
+        ruby-version: ['2.7']
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1      
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
-    - name: Run tests
-      run: bundle exec rspec
+      - uses: actions/checkout@v2
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      - name: Run tests
+        run: bundle exec rspec
+
+      - uses: joshmfrankel/simplecov-check-action@main
+        with:
+          minimum_file_coverage: 85
+          minimum_suite_coverage: 90
+          github_token: ${{ secrets.GITHUB_TOKEN }}

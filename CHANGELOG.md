@@ -1,3 +1,101 @@
+# 1.3.4 - Bump `jwt` dependency
+
+## Bugfixes
+
+- Fix `blank` method. It used to return `nil`, while now returns empty string as it should
+
+## Misc
+
+- Prepare `jwt` for upgrade to 2.+
+
+# 1.3.3 - DNS & JWT methods
+
+## Enhancements
+
+- Implement `workato.jwt_decode` method [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#jwt-decode)
+- Implement `workato.net.lookup` method, which makes DNS lookup [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#net-lookup)
+- Add HS384 and HS512 to list of supported JWT algorithms for `workato.jwt_encode` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#jwt-encode)
+
+## Bugfixes
+
+- Allow expires at as second return value of `webhook_subscribe` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/triggers.html#webhook-subscribe)
+- Fix `Request#format_xml` for implicit params
+
+## Misc
+
+- Prepare `nokogiri` for upgrade to 1.14
+- Prepare `rails-html-sanitizer` for upgrade to 1.4.4
+
+# 1.3.2 - More JWT algorithms & Cleanup
+
+## Enhancements
+
+- Add more JWT algorithms to `workato.jwt_encode` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#jwt-encode)
+
+## Misc
+
+- Improve test coverage
+- Get rid of `oauth2` dependency
+
+## Enhancements
+
+- Support new API Client tokens in [workato push](https://docs.workato.com/developing-connectors/sdk/cli/reference/cli-commands.html#workato-push)
+  and [workato generate schema](https://docs.workato.com/developing-connectors/sdk/cli/reference/cli-commands.html#workato-push)
+
+## Bugfixes
+
+- Fix simple stream mock in CLI. [Workato Docs](https://docs.workato.com/developing-connectors/sdk/cli/guides/cli/upload-streaming-actions.html#upload-file-sample-connector-upload-file-to-url)
+
+## Misc 
+
+- Cleanup public dev docs on [RubyDoc.info](https://rubydoc.info/gems/workato-connector-sdk) 
+- Add more Sorbet definitions
+
+# 1.3.0 - Streams Support & Ruby 2.7
+
+## Enhancements
+
+- Drop Ruby 2.4, 2.5, 2.6 and add Ruby 3.0 and 3.1 support. Now minimal Ruby version is 2.7.6
+- Implement streams support. Add ability to execute and test streams both consumer and producer parts. [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/streams.html)
+  - Add `workato.stream.in` and `workato.stream.out` methods
+  - Allow mock streams for testing. See [examples](https://github.com/workato/workato-connector-sdk/blob/master/spec/examples/stream/connector_spec.rb)
+- Implement exponential action retry delay. Previously it was same delay interval between retries
+- Introduce concrete error types inherited from base `RuntimeError`.
+
+## Bugfixes
+
+- Fix `String#+` and `Enumerable#format_map` extensions
+- Fix schema output for `optional: false`
+- Multiple fixes for Ruby 3+
+
+## Misc
+
+- Get rid of `countries` and `currencies` gems. Replace by smaller subset of data.
+- Cleanup dev dependencies. Remove unused gems and fix versions.
+- Move `Extension::Binary` to `Types::Binary`. Keep extensions namespace for core Ruby patches.
+- Add more Sorbet definitions
+
+# 1.2.0 - Upgrade rest-client & multi-auth & SDK methods
+
+## Enhancements
+
+- Implement `execution_context`
+- Implement `workato.csv.*` methods
+  - [workato.csv.parse](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#csv-parse)
+  - [workato.csv.generate](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#csv-generate)
+- Implement multi-auth connector support. [Workato Docs](https://docs.workato.com/developing-connectors/sdk/guides/authentication/multi_auth.html)
+- Support `lookup` and `account_property` methods in `base_uri`, `authorize_url`, `token_url`
+  - [lookup](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#lookup)
+  - [account_property](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#account-property)
+- Improve request error backtrace
+
+## Misc
+
+- Upgrade rest-client 2.0.2 -> 2.1.0
+  - Tests could be broken. For more details see https://github.com/workato/workato-connector-sdk/releases/tag/v1.2.0 
+- Get rid of redundant `hash_with_indifferent_access` converting
+- Add docs how to install `charlock_holmes` gem
+
 # 1.1.0 - Multiple fixes & changes
 
 ## Enhancements
@@ -35,12 +133,12 @@
 
 - Fix default value for webhook_subscribe_output input param
 
-## Misc 
+## Misc
 
 - Update loofah 2.14.0 -> 2.16.0
 - Update rubyzip 1.3 -> 2.3
 - Update activesupport 5.2.7.1 -> 5.2.8.1
-- Refactoring, code polishing, improving stability overall  
+- Refactoring, code polishing, improving stability overall
 
 # 1.0.1 - Fix String#to_date
 

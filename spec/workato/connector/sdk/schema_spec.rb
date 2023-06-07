@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 module Workato::Connector::Sdk
@@ -103,6 +104,7 @@ module Workato::Connector::Sdk
             'name' => 'int_field',
             'control_type' => 'number',
             'label' => 'Int field',
+            'optional' => false,
             'parse_output' => 'integer_conversion'
           },
           {

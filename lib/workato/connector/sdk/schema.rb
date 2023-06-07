@@ -1,20 +1,22 @@
 # typed: false
 # frozen_string_literal: true
 
+using Workato::Extension::HashWithIndifferentAccess
+
 module Workato
   module Connector
     module Sdk
       class Schema < SimpleDelegator
         def initialize(schema: [])
-          super(Fields.new(::Array.wrap(schema).map(&:with_indifferent_access)))
+          super(Fields.new(::Array.wrap(schema).map { |i| HashWithIndifferentAccess.wrap(i) }))
         end
 
         def trim(input)
-          input.with_indifferent_access.keep_if { |property_name| includes_property?(property_name) }
+          HashWithIndifferentAccess.wrap(input).keep_if { |property_name| includes_property?(property_name) }
         end
 
         def apply(input, enforce_required:, &block)
-          input.with_indifferent_access.tap do |input_with_indifferent_access|
+          HashWithIndifferentAccess.wrap(input).tap do |input_with_indifferent_access|
             apply_to_hash(self, input_with_indifferent_access, enforce_required: enforce_required, &block)
           end
         end
@@ -99,17 +101,17 @@ module Workato
             return Type::Time.from_date_time(value)
           when ::Date
             return value.to_date
-          when ::Numeric, ::TrueClass, ::FalseClass, Workato::Extension::Binary, Type::UnicodeString,
-            ::Array, ::Hash
+          when ::Numeric, ::TrueClass, ::FalseClass, Workato::Types::Binary, Workato::Types::UnicodeString,
+            ::Array, ::Hash, Stream::Proxy
             return value
           when Extension::Array::ArrayWhere
             return value.to_a
           when ::String
             if value.encoding == Encoding::ASCII_8BIT
-              return Workato::Extension::Binary.new(value)
+              return Workato::Types::Binary.new(value)
             end
 
-            return Type::UnicodeString.new(value)
+            return Workato::Types::UnicodeString.new(value)
           else
             if value.respond_to?(:to_time)
               return Type::Time.from_time(value.to_time)
@@ -117,13 +119,15 @@ module Workato
 
             if value.respond_to?(:read) && value.respond_to?(:rewind)
               value.rewind
-              return Workato::Extension::Binary.new(value.read.force_encoding(Encoding::ASCII_8BIT))
+              return Workato::Types::Binary.new(value.read.force_encoding(Encoding::ASCII_8BIT))
             end
           end
 
           raise ArgumentError, "Unsupported data type: #{value.class}"
         end
       end
+
+      private_constant :Schema
 
       class Fields < ::Array
         def initialize(fields)
@@ -176,7 +180,9 @@ module Workato
 
         def clean_values(field)
           field.transform_values! do |value|
-            value.presence && (value.is_a?(::Symbol) && value.to_s || value)
+            next value if value.is_a?(FalseClass)
+
+            value.presence && ((value.is_a?(::Symbol) && value.to_s) || value)
           end
           field.compact!
           field
@@ -228,4 +234,3 @@ require_relative './schema/field/object'
 require_relative './schema/field/string'
 
 require_relative './schema/type/time'
-require_relative './schema/type/unicode_string'

@@ -12,8 +12,8 @@ module Workato
       API_GENERATE_SCHEMA_PATH = '/api/sdk/generate_schema'
 
       def initialize(options:)
-        @api_email = options[:api_email] || ENV[Workato::Connector::Sdk::WORKATO_API_EMAIL_ENV]
-        @api_token = options[:api_token] || ENV[Workato::Connector::Sdk::WORKATO_API_TOKEN_ENV]
+        @api_email = options[:api_email] || ENV.fetch(Workato::Connector::Sdk::WORKATO_API_EMAIL_ENV, nil)
+        @api_token = options[:api_token] || ENV.fetch(Workato::Connector::Sdk::WORKATO_API_TOKEN_ENV, nil)
         @options = options
       end
 
@@ -68,10 +68,24 @@ module Workato
       end
 
       def auth_headers
-        {
-          'x-user-email' => api_email,
-          'x-user-token' => api_token
-        }
+        if api_email.present?
+          warn <<~WARNING
+            You are using old authorization schema with --api-email and --api-token which is less secure and deprecated.
+            We strongly recommend migrating over to API Clients for authentication to Workato APIs.
+
+            Learn more: https://docs.workato.com/developing-connectors/sdk/cli/reference/cli-commands.html#workato-generate-schema
+
+            If you use API Client token but still see this message, ensure you do not pass --api-email param nor have #{Workato::Connector::Sdk::WORKATO_API_EMAIL_ENV} environment variable set.
+          WARNING
+          {
+            'x-user-email' => api_email,
+            'x-user-token' => api_token
+          }
+        else
+          {
+            'Authorization' => "Bearer #{api_token}"
+          }
+        end
       end
 
       private_constant :API_GENERATE_SCHEMA_PATH

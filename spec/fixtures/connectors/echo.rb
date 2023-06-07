@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 {
@@ -295,11 +296,19 @@
   object_definitions: {
     echo: {
       fields: lambda do |connection, config_fields|
-        {
-          connection: connection,
-          config_fields: config_fields
-        }
+        [
+          {
+            connection: connection,
+            config_fields: config_fields
+          }
+        ]
       end
     }
+  },
+
+  streams: {
+    echo_stream: lambda do |input, from, to, size|
+      [{ input: input, from: from, to: to, size: size }, true]
+    end
   }
 }

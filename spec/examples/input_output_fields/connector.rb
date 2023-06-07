@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 {
@@ -30,7 +31,7 @@
     event: {
       fields: lambda do |_connection, config_fields|
         response = get('http://httpbin.org/anything/object_definitions/event').params(config_fields)
-        response['args'].merge(name: 'type')
+        [response['args'].merge(name: 'type')]
       end
     },
     static: {

@@ -3,11 +3,20 @@
 
 require 'securerandom'
 
+using Workato::Extension::HashWithIndifferentAccess
+
 module Workato
   module Connector
     module Sdk
       module SorbetTypes
-        WebhookSubscribeOutputHash = T.type_alias { T::Hash[T.any(String, Symbol), T.untyped] }
+        WebhookSubscribeClosureHash = T.type_alias { T::Hash[T.any(String, Symbol), T.untyped] }
+
+        WebhookSubscribeOutput = T.type_alias do
+          T.any(
+            WebhookSubscribeClosureHash,
+            [WebhookSubscribeClosureHash, T.nilable(T.any(Time, ActiveSupport::TimeWithZone))]
+          )
+        end
 
         WebhookNotificationPayload = T.type_alias { T.untyped }
 
@@ -32,15 +41,18 @@ module Workato
             trigger: SorbetTypes::SourceHash,
             methods: SorbetTypes::SourceHash,
             connection: Connection,
-            object_definitions: T.nilable(ObjectDefinitions)
+            object_definitions: T.nilable(ObjectDefinitions),
+            streams: Streams
           ).void
         end
-        def initialize(trigger:, methods: {}, connection: Connection.new, object_definitions: nil)
+        def initialize(trigger:, methods: {}, connection: Connection.new, object_definitions: nil,
+                       streams: ProhibitedStreams.new)
           super(
             operation: trigger,
             connection: connection,
             methods: methods,
-            object_definitions: object_definitions
+            object_definitions: object_definitions,
+            streams: streams
           )
         end
 
@@ -66,7 +78,6 @@ module Workato
           ) do |connection, payload, eis, eos|
             instance_exec(connection, payload[:input], payload[:closure], eis, eos, &poll_proc)
           end
-          output.with_indifferent_access
           output[:events] = Array.wrap(output[:events])
                                  .reverse!
                                  .map! { |event| ::Hash.try_convert(event) || event }
@@ -117,7 +128,7 @@ module Workato
             headers: T::Hash[T.any(String, Symbol), T.untyped],
             params: T::Hash[T.any(String, Symbol), T.untyped],
             settings: T.nilable(SorbetTypes::SettingsHash),
-            webhook_subscribe_output: SorbetTypes::WebhookSubscribeOutputHash
+            webhook_subscribe_output: T.nilable(SorbetTypes::WebhookSubscribeClosureHash)
           ).returns(
             SorbetTypes::WebhookNotificationOutputHash
           )
@@ -133,16 +144,15 @@ module Workato
           webhook_subscribe_output = {}
         )
           connection.merge_settings!(settings) if settings
-          output = Dsl::WithDsl.execute(
-            connection,
-            input.with_indifferent_access,
+          output = global_dsl_context.execute(
+            HashWithIndifferentAccess.wrap(input),
             payload,
-            Array.wrap(extended_input_schema).map(&:with_indifferent_access),
-            Array.wrap(extended_output_schema).map(&:with_indifferent_access),
-            headers.with_indifferent_access,
-            params.with_indifferent_access,
+            Array.wrap(extended_input_schema).map { |i| HashWithIndifferentAccess.wrap(i) },
+            Array.wrap(extended_output_schema).map { |i| HashWithIndifferentAccess.wrap(i) },
+            HashWithIndifferentAccess.wrap(headers),
+            HashWithIndifferentAccess.wrap(params),
             connection.settings,
-            webhook_subscribe_output.with_indifferent_access,
+            HashWithIndifferentAccess.wrap(webhook_subscribe_output),
             &trigger[:webhook_notification]
           )
           if output.is_a?(::Array)
@@ -158,11 +168,9 @@ module Workato
             settings: T.nilable(SorbetTypes::SettingsHash),
             input: SorbetTypes::OperationInputHash,
             recipe_id: String
-          ).returns(
-            SorbetTypes::WebhookSubscribeOutputHash
-          )
+          ).returns(SorbetTypes::WebhookSubscribeOutput)
         end
-        def webhook_subscribe(webhook_url = '', settings = nil, input = {}, recipe_id = SecureRandom.uuid)
+        def webhook_subscribe(webhook_url = '', settings = nil, input = {}, recipe_id = recipe_id!)
           webhook_subscribe_proc = trigger[:webhook_subscribe]
           execute(settings, { input: input, webhook_url: webhook_url, recipe_id: recipe_id }) do |connection, payload|
             instance_exec(
@@ -175,7 +183,7 @@ module Workato
           end
         end
 
-        sig { params(webhook_subscribe_output: SorbetTypes::WebhookSubscribeOutputHash).returns(T.untyped) }
+        sig { params(webhook_subscribe_output: SorbetTypes::WebhookSubscribeClosureHash).returns(T.untyped) }
         def webhook_unsubscribe(webhook_subscribe_output = {})
           webhook_unsubscribe_proc = trigger[:webhook_unsubscribe]
           execute(nil, webhook_subscribe_output) do |_connection, input|
@@ -189,7 +197,7 @@ module Workato
             payload: T::Hash[T.any(String, Symbol), T.untyped],
             headers: T::Hash[T.any(String, Symbol), T.untyped],
             params: T::Hash[T.any(String, Symbol), T.untyped],
-            webhook_subscribe_output: SorbetTypes::WebhookSubscribeOutputHash
+            webhook_subscribe_output: T.nilable(SorbetTypes::WebhookSubscribeClosureHash)
           ).returns(
             T.any(SorbetTypes::WebhookNotificationOutputHash, SorbetTypes::PollOutputHash)
           )
@@ -230,6 +238,11 @@ module Workato
         sig { returns(T::Boolean) }
         def webhook_notification?
           trigger[:webhook_notification].present?
+        end
+
+        sig { returns(Dsl::WithDsl) }
+        def global_dsl_context
+          Dsl::WithDsl.new(connection, streams)
         end
       end
     end

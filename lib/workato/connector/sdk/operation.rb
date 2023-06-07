@@ -5,6 +5,8 @@ require_relative './dsl'
 require_relative './block_invocation_refinements'
 require_relative './schema'
 
+using Workato::Extension::HashWithIndifferentAccess
+
 module Workato
   module Connector
     module Sdk
@@ -42,24 +44,32 @@ module Workato
         extend T::Sig
 
         include Dsl::Global
+        include Dsl::AWS
         include Dsl::HTTP
         include Dsl::Call
         include Dsl::Error
+        include Dsl::ExecutionContext
 
         using BlockInvocationRefinements
+
+        sig { override.returns(Streams) }
+        attr_reader :streams
 
         sig do
           params(
             operation: SorbetTypes::SourceHash,
             methods: SorbetTypes::SourceHash,
             connection: Connection,
+            streams: Streams,
             object_definitions: T.nilable(ObjectDefinitions)
           ).void
         end
-        def initialize(operation: {}, methods: {}, connection: Connection.new, object_definitions: nil)
-          @operation = T.let(operation.with_indifferent_access, HashWithIndifferentAccess)
-          @_methods = T.let(methods.with_indifferent_access, HashWithIndifferentAccess)
+        def initialize(operation: {}, methods: {}, connection: Connection.new, streams: ProhibitedStreams.new,
+                       object_definitions: nil)
+          @operation = T.let(HashWithIndifferentAccess.wrap(operation), HashWithIndifferentAccess)
+          @_methods = T.let(HashWithIndifferentAccess.wrap(methods), HashWithIndifferentAccess)
           @connection = T.let(connection, Connection)
+          @streams = T.let(streams, Streams)
           @object_definitions = T.let(object_definitions, T.nilable(ObjectDefinitions))
         end
 
@@ -80,13 +90,14 @@ module Workato
           connection.merge_settings!(settings) if settings
           request_or_result = T.unsafe(self).instance_exec(
             connection.settings,
-            input.with_indifferent_access,
-            Array.wrap(extended_input_schema).map(&:with_indifferent_access),
-            Array.wrap(extended_output_schema).map(&:with_indifferent_access),
-            continue.with_indifferent_access,
+            HashWithIndifferentAccess.wrap(input),
+            Array.wrap(extended_input_schema).map { |i| HashWithIndifferentAccess.wrap(i) },
+            Array.wrap(extended_output_schema).map { |i| HashWithIndifferentAccess.wrap(i) },
+            HashWithIndifferentAccess.wrap(continue),
             &block
           )
-          resolve_request(request_or_result)
+          result = resolve_request(request_or_result)
+          try_convert_to_hash_with_indifferent_access(result)
         end
 
         sig do
@@ -214,7 +225,7 @@ module Workato
         def resolve_request(request_or_result)
           case request_or_result
           when Request
-            resolve_request(request_or_result.execute!)
+            resolve_request(request_or_result.response!)
           when ::Array
             request_or_result.each_with_index.inject(request_or_result) do |acc, (item, index)|
               response_item = resolve_request(item)
@@ -225,7 +236,7 @@ module Workato
               end
             end
           when ::Hash
-            request_or_result.inject(request_or_result.with_indifferent_access) do |acc, (key, value)|
+            request_or_result.inject(request_or_result) do |acc, (key, value)|
               response_value = resolve_request(value)
               if response_value.equal?(value)
                 acc
@@ -238,6 +249,18 @@ module Workato
           end
         end
 
+        sig { params(value: T.untyped).returns(T.untyped) }
+        def try_convert_to_hash_with_indifferent_access(value)
+          case value
+          when ::Hash
+            HashWithIndifferentAccess.wrap(value)
+          when ::Array
+            value.map! { |i| try_convert_to_hash_with_indifferent_access(i) }
+          else
+            value
+          end
+        end
+
         sig { returns(ObjectDefinitions) }
         def object_definitions
           T.must(@object_definitions)
@@ -246,7 +269,7 @@ module Workato
         sig { returns(HashWithIndifferentAccess) }
         attr_reader :operation
 
-        sig { returns(Connection) }
+        sig { override.returns(Connection) }
         attr_reader :connection
       end
     end

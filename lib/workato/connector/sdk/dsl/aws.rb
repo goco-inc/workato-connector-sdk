@@ -2,6 +2,9 @@
 # frozen_string_literal: true
 
 require 'aws-sigv4'
+require 'workato/utilities/xml'
+
+using Workato::Extension::HashWithIndifferentAccess
 
 module Workato
   module Connector
@@ -9,15 +12,25 @@ module Workato
       module Dsl
         module AWS
           TEMP_CREDENTIALS_REFRESH_TIMEOUT = 60 # seconds
+          private_constant :TEMP_CREDENTIALS_REFRESH_TIMEOUT
 
           DUMMY_AWS_IAM_EXTERNAL_ID = 'dummy-aws-iam-external-id'
-          DUMMY_AWS_WORKATO_ACCOUNT_ID = 'dummy-aws-workato-account-id'
+          private_constant :DUMMY_AWS_IAM_EXTERNAL_ID
 
-          AMAZON_ROLE_CLIENT_ID = ENV['AMAZON_ROLE_CLIENT_ID']
-          AMAZON_ROLE_CLIENT_KEY = ENV['AMAZON_ROLE_CLIENT_KEY']
-          AMAZON_ROLE_CLIENT_SECRET = ENV['AMAZON_ROLE_CLIENT_SECRET']
+          DUMMY_AWS_WORKATO_ACCOUNT_ID = 'dummy-aws-workato-account-id'
+          private_constant :DUMMY_AWS_WORKATO_ACCOUNT_ID
+
+          AMAZON_ROLE_CLIENT_ID = ENV.fetch('AMAZON_ROLE_CLIENT_ID', nil)
+          private_constant :AMAZON_ROLE_CLIENT_ID
+
+          AMAZON_ROLE_CLIENT_KEY = ENV.fetch('AMAZON_ROLE_CLIENT_KEY', nil)
+          private_constant :AMAZON_ROLE_CLIENT_KEY
+
+          AMAZON_ROLE_CLIENT_SECRET = ENV.fetch('AMAZON_ROLE_CLIENT_SECRET', nil)
+          private_constant :AMAZON_ROLE_CLIENT_SECRET
 
           WWW_FORM_CONTENT_TYPE = 'application/x-www-form-urlencoded; charset=utf-8'
+          private_constant :WWW_FORM_CONTENT_TYPE
 
           def aws
             @aws ||= Private.new(connection: connection)
@@ -55,7 +68,7 @@ module Workato
                 method: method,
                 path: path,
                 params: params,
-                headers: (headers || {}).with_indifferent_access,
+                headers: HashWithIndifferentAccess.wrap(headers),
                 payload: payload
               )
 
@@ -134,7 +147,7 @@ module Workato
                 headers: headers,
                 method: :get
               )
-              response = Workato::Connector::Sdk::Xml.parse_xml_to_hash(response.body)
+              response = Workato::Utilities::Xml.parse_xml_to_hash(response.body)
 
               temp_credentials = response.dig('AssumeRoleResponse', 0, 'AssumeRoleResult', 0, 'Credentials', 0)
               {

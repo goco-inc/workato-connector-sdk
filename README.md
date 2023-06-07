@@ -13,9 +13,10 @@ This guide below showcases how you can do the following things:
 
 ## Prerequisites
 1. Install [RVM ("Ruby Version Manager")](http://rvm.io/) or a Ruby manager of your choice. You can find more at [here](https://www.ruby-lang.org/en/documentation/installation/)
-2. Choose between Ruby versions `2.4.10` `2.5.X` or `2.7.X`. Our preferred version is `2.7.X`.
+2. Choose between Ruby versions `2.7.X`, `3.0.X`, `3.1.X`. Our preferred version is `2.7.6`.
 3. Verify you're running a valid ruby version. Do this by running either `ruby -v` or the commands within your version manager. i.e., `rvm current` if you have installed RVM.
 4. For Windows you need tzinfo-data gem installed as well. `gem install tzinfo-data`
+5. SDK depends on `charlock_holmes` gem. Check [gem's documentation](https://github.com/brianmario/charlock_holmes#installing) if you have troubles when install this dependency. Additional [details for Windows](https://github.com/brianmario/charlock_holmes/issues/84#issuecomment-652877605)
    
 ```bash
 ruby -v
@@ -338,7 +339,6 @@ Options:
   [--col-sep=COL_SEP]      # Use separator for CSV converter
                            # Default: comma
                            # Possible values: comma, space, tab, colon, semicolon, pipe
-  [--api-email=API_EMAIL]  # Email for accessing Workato API or set WORKATO_API_EMAIL environment variable
   [--api-token=API_TOKEN]  # Token for accessing Workato API or set WORKATO_API_TOKEN environment variable
 ```
 
@@ -424,8 +424,6 @@ Options:
   -l, [--logo=LOGO]                # Path to connector logo: png or jpeg file
   -n, [--notes=NOTES]              # Release notes
   -c, [--connector=CONNECTOR]      # Path to connector source code
-      [--api-email=API_EMAIL]      # Email for accessing Workato API.
-                                   # If present overrides value from WORKATO_API_EMAIL environment variable.
       [--api-token=API_TOKEN]      # Token for accessing Workato API.
                                    # If present overrides value from WORKATO_API_TOKEN environment variable.
       [--environment=ENVIRONMENT]  # Data center specific URL to push connector code.
@@ -1123,7 +1121,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['2.4.10', '2.5', '2.7']
+        ruby-version: ['2.7', '3.0', '3.1']
 
     steps:
     - uses: actions/checkout@v2
@@ -1138,7 +1136,6 @@ jobs:
       run: bundle exec rspec
     # - name: Push to DEV workspace # Use this to push to DEV. This can be enabled when a PR is merged.
     #   env: 
-    #     WORKATO_API_EMAIL: ${{ secrets.WORKATO_DEV_ENVIRONMENT_API_EMAIL}}
     #     WORKATO_API_TOKEN: ${{ secrets.WORKATO_DEV_ENVIRONMENT_API_TOKEN}} 
     #   run: workato push
 ```
