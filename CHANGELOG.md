@@ -1,3 +1,37 @@
+# 1.3.8 - Bump dependencies
+
+## Misc
+
+- Prepare `activesupport` for upgrade to 6.1
+- Prepare `rails-html-sanitizer` for upgrade to 1.6.0
+- Prepare `i18n` for upgrade to 1.14.1
+
+# 1.3.7 - Fix Request#payload & Add String methods
+
+## Enhancements
+
+- Add encode_sha512, encode_sha512_256, rsa_512 to String
+
+## Bugfixes
+
+- Fix `get` like HTTP method became a `POST` if payload added [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/http.html#http-verb-methods)
+
+## Misc
+
+- Wrap JWT::VerificationError and OpenSSL::Cipher::CipherError with Sdk::ArgumentError
+
+# 1.3.6 - Fix Request#detect_auth_error!
+
+## Bugfixes
+
+- Fix incompatibility of `connection.authorization.detect_on` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/connection/authorization.html#detect-on)
+
+# 1.3.5 - Fix Request#payload
+
+## Bugfixes
+
+- Fix `post` like HTTP methods for String payload [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/http.html#http-verb-methods)
+
 # 1.3.4 - Bump `jwt` dependency
 
 ## Bugfixes
@@ -18,7 +52,7 @@
 
 ## Bugfixes
 
-- Allow expires at as second return value of `webhook_subscribe` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/triggers.html#webhook-subscribe)
+- Allow expires at as second return value of `webhook-subscribe` [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/triggers.html#webhook-subscribe)
 - Fix `Request#format_xml` for implicit params
 
 ## Misc

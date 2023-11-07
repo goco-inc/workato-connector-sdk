@@ -11,9 +11,7 @@ require 'active_support/json'
 
 require 'workato/utilities/encoding'
 require 'workato/utilities/xml'
-require_relative './block_invocation_refinements'
-
-using Workato::Extension::HashWithIndifferentAccess
+require_relative 'block_invocation_refinements'
 
 module Workato
   module Connector
@@ -32,9 +30,9 @@ module Workato
           @action = action
           @headers = {}
           @case_sensitive_headers = {}
-          @render_request = ->(payload) { payload }
-          @parse_response = ->(payload) { payload }
-          @after_response = ->(_response_code, parsed_response, _response_headers) { parsed_response }
+          @render_request = DEFAULT_RENDER_REQUEST
+          @parse_response = DEFAULT_PARSE_RESPONSE
+          @after_response = DEFAULT_AFTER_RESPONSE
           @callstack_before_request = Array.wrap(Kernel.caller)
         end
 
@@ -77,7 +75,7 @@ module Workato
 
         def params(params)
           if params.is_a?(Hash)
-            @params ||= HashWithIndifferentAccess.new
+            @params ||= ActiveSupport::HashWithIndifferentAccess.new
             @params.merge!(params)
           else
             @params = params
@@ -86,17 +84,16 @@ module Workato
         end
 
         def payload(payload = nil)
-          case payload
-          when Array
-            @payload ||= []
-            @payload += payload
-          when NilClass
-            # no-op
+          if defined?(@payload) || payload.is_a?(Hash)
+            @payload ||= ActiveSupport::HashWithIndifferentAccess.new
+            @payload.merge!(payload) if payload
           else
-            @payload ||= {}.with_indifferent_access
-            @payload.merge!(payload)
+            @payload = payload
           end
-          yield(@payload) if Kernel.block_given?
+          if Kernel.block_given?
+            @payload ||= ActiveSupport::HashWithIndifferentAccess.new
+            yield(@payload)
+          end
           self
         end
 
@@ -260,6 +257,15 @@ module Workato
 
         private
 
+        DEFAULT_RENDER_REQUEST = ->(_) {}
+        private_constant :DEFAULT_RENDER_REQUEST
+
+        DEFAULT_PARSE_RESPONSE = ->(payload) { payload }
+        private_constant :DEFAULT_PARSE_RESPONSE
+
+        DEFAULT_AFTER_RESPONSE = ->(_response_code, parsed_response, _response_headers) { parsed_response }
+        private_constant :DEFAULT_AFTER_RESPONSE
+
         attr_reader :method
 
         def response
@@ -367,7 +373,7 @@ module Workato
         end
 
         def detect_auth_error!(response)
-          return unless authorized?
+          return unless authorization? && connection.authorization.reauthorizable?
 
           error_patterns = connection.authorization.detect_on
           return unless error_patterns.any? { |pattern| pattern === response rescue false }
@@ -376,7 +382,7 @@ module Workato
         end
 
         def after_error_response_matches?(exception)
-          return if @after_error_response_matches.blank?
+          return false if @after_error_response_matches.blank?
 
           @after_error_response_matches.find do |match|
             case match
@@ -394,14 +400,15 @@ module Workato
           within_action_context(
             exception.http_code,
             exception.http_body,
-            HashWithIndifferentAccess.wrap(exception.http_headers),
+            Utilities::HashWithIndifferentAccess.wrap(exception.http_headers),
             exception.message,
             &@after_error_response
           )
         end
 
         def apply_after_response(code, parsed_response, headers)
-          encoded_headers = (headers || {}).each_with_object(HashWithIndifferentAccess.new) do |(k, v), h|
+          headers ||= {}
+          encoded_headers = headers.each_with_object(ActiveSupport::HashWithIndifferentAccess.new) do |(k, v), h|
             h[k] = Workato::Utilities::Encoding.force_best_encoding!(v.to_s)
           end
           within_action_context(code, parsed_response, encoded_headers, &@after_response)
@@ -412,12 +419,12 @@ module Workato
         end
 
         sig { returns(T::Boolean) }
-        def authorized?
+        def authorization?
           !!@connection&.authorization?
         end
 
         def authorized
-          return yield unless authorized?
+          return yield unless authorization?
 
           apply = connection.authorization.source[:apply] || connection.authorization.source[:credentials]
           return yield unless apply
@@ -442,11 +449,11 @@ module Workato
 
         sig do
           params(
-            settings: HashWithIndifferentAccess,
+            settings: ActiveSupport::HashWithIndifferentAccess,
             access_token: T.untyped,
             auth_type: T.untyped,
             apply_proc: T.proc.params(
-              settings: HashWithIndifferentAccess,
+              settings: ActiveSupport::HashWithIndifferentAccess,
               access_token: T.untyped,
               auth_type: T.untyped
             ).void
@@ -458,10 +465,10 @@ module Workato
 
         sig do
           params(
-            settings: HashWithIndifferentAccess,
+            settings: ActiveSupport::HashWithIndifferentAccess,
             auth_type: T.untyped,
             apply_proc: T.proc.params(
-              settings: HashWithIndifferentAccess,
+              settings: ActiveSupport::HashWithIndifferentAccess,
               auth_type: T.untyped
             ).void
           ).void
@@ -472,7 +479,7 @@ module Workato
 
         sig do
           params(
-            settings_before: HashWithIndifferentAccess,
+            settings_before: ActiveSupport::HashWithIndifferentAccess,
             http_code: T.nilable(Integer),
             http_body: T.nilable(String),
             exception: T.nilable(String)

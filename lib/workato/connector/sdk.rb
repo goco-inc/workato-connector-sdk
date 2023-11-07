@@ -18,7 +18,6 @@ require_relative '../extension/date'
 require_relative '../extension/enumerable'
 require_relative '../extension/extra_chain_cert'
 require_relative '../extension/hash'
-require_relative '../extension/hash_with_indifferent_access'
 require_relative '../extension/integer'
 require_relative '../extension/nil_class'
 require_relative '../extension/object'
@@ -27,7 +26,7 @@ require_relative '../extension/string'
 require_relative '../extension/symbol'
 require_relative '../extension/time'
 
-require_relative './sdk/core'
+require_relative 'sdk/core'
 
 begin
   tz = ENV.fetch('TZ', nil)
