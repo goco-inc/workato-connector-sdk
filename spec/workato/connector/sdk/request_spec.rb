@@ -79,7 +79,27 @@ module Workato::Connector::Sdk
       let(:settings) { { host: 'jsonplaceholder.typicode.com' } }
       let(:request) { described_class.new(uri, connection: connection) }
 
-      it { is_expected.to include('userId') }
+      context 'when nil' do
+        let(:base_uri) { ->(connection) { connection['hello'] } }
+
+        it { expect { response }.to raise_error(Workato::Connector::Sdk::InvalidURIError) }
+      end
+
+      context 'when string given instead of lambda' do
+        let(:base_uri) { 'test' }
+
+        it { expect { response }.to raise_error(TypeError) }
+      end
+
+      context 'with relative uri' do
+        it { is_expected.to include('userId') }
+      end
+
+      context 'with nil relative uri' do
+        let(:uri) { nil }
+
+        it { expect { response }.to raise_error(Workato::Connector::Sdk::InvalidURIError) }
+      end
     end
 
     context 'with after_response' do
@@ -160,7 +180,7 @@ module Workato::Connector::Sdk
       context 'when response payload format error' do
         let(:uri) { 'https://httpbin.org/html' }
 
-        it { expect { response }.to raise_error(JSONResponseFormatError, /unexpected token at/) }
+        it { expect { response }.to raise_error(JSONResponseFormatError, /unexpected character:/) }
       end
 
       context 'when get request with payload' do
@@ -271,7 +291,7 @@ module Workato::Connector::Sdk
             return '4e9a1b9fd88aa52b4a8a0f0d3cf09b54'
           end
 
-          super(str)
+          super
         end
       end
       # rubocop:enable Lint/ConstantDefinitionInBlock

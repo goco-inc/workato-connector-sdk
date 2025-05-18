@@ -1,3 +1,67 @@
+# 1.3.15 - Prepare nokogiri for upgrade to 1.18.x
+
+## Misc
+
+- Relax Nokogiri requirements to resolve security vulnerability
+- Update Sorbet stubs for third party gems
+
+# 1.3.14 - Fix sorbet definition for `refresh` output
+
+## Bugfixes
+
+- Fix `refresh` method output definition. [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/connection/authorization.html#refresh)
+
+# 1.3.13 - Handle invalid output from trigger
+
+## Enhancements
+
+- Raise custom error when trigger output is not expected format. [Workato Docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/triggers.html#poll)
+
+## Misc
+
+- Unlock `activesupport` gem version 7.0
+- Lock `public_suffix` gem version to support Ruby 2.7
+
+# 1.3.12 - Unlock `charlock_holmes` gem 
+
+## Misc
+
+- Unlock `charlock_holmes` gem version to allow installation on Ruby 3.1
+
+# 1.3.11 - Multiple small fixes
+
+## Enhancements
+
+- No op `Dsl::WorkatoPackage#parse_json` unless input is a `String`. [Workato docs](https://docs.workato.com/developing-connectors/sdk/sdk-reference/ruby_methods.html#parse-json)
+- Raise custom error when `Workato::Extension::String#+` argument is `nil`.
+- `Operation#schema_fields` to always return an array
+
+## Misc
+
+- Keep `BlockInvocationRefinements::BasicObject#instance_exec` ruby 2.7 behaviour in ruby 3.0+
+- Code polishing & refactoring
+
+# 1.3.10 - AES encryption & dependencies upgrade
+
+## Enhancements
+
+- Introduce `aes_gcm_encrypt` and `aes_gcm_decrypt` methods
+
+## Misc
+
+- Fix `format_xml` to work in ruby 3.0+
+- Relax Nokogiri requirements to resolve security vulnerability
+
+# 1.3.9 - Fix Request#build_url
+
+## Enhancements
+
+- Raise custom error when `connection.base_uri` returns invalid URI
+
+## Bugfixes
+
+- Fix `Request#build_url` uses stale connection settings even after connection refresh
+
 # 1.3.8 - Bump dependencies
 
 ## Misc
@@ -10,7 +74,7 @@
 
 ## Enhancements
 
-- Add encode_sha512, encode_sha512_256, rsa_512 to String
+- Add `encode_sha512`, `encode_sha512_256`, `rsa_512` to `String`
 
 ## Bugfixes
 
@@ -18,7 +82,7 @@
 
 ## Misc
 
-- Wrap JWT::VerificationError and OpenSSL::Cipher::CipherError with Sdk::ArgumentError
+- Wrap `JWT::VerificationError` and `OpenSSL::Cipher::CipherError` with `Sdk::ArgumentError`
 
 # 1.3.6 - Fix Request#detect_auth_error!
 
@@ -218,7 +282,7 @@
 - Implement `verify_rsa` and `decode_url`
 
 ## Misc
-- Introduce custom `Workato::Connector::SDK::RuntimeError` exception type for `error` method.
+- Introduce custom `Sdk::RuntimeError` exception type for `error` method.
 
 # 0.3.0 - Workato Schema, exit codes
 

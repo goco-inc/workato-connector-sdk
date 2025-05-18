@@ -30,10 +30,13 @@ module Workato
         RefreshOutput = T.type_alias do
           T.any(
             [
-              ActiveSupport::HashWithIndifferentAccess,
-              T.nilable(String)
+              ActiveSupport::HashWithIndifferentAccess, # tokens
+              T.nilable(ActiveSupport::HashWithIndifferentAccess) # settings
             ],
-            ActiveSupport::HashWithIndifferentAccess
+            [
+              ActiveSupport::HashWithIndifferentAccess # tokens
+            ],
+            ActiveSupport::HashWithIndifferentAccess # tokens
           )
         end
       end
@@ -42,7 +45,7 @@ module Workato
         extend T::Sig
         include MonitorMixin
 
-        using BlockInvocationRefinements
+        using BlockInvocationRefinements # rubocop:disable Sorbet/Refinement core SDK feature
 
         # @api private
         sig { returns(ActiveSupport::HashWithIndifferentAccess) }

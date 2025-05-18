@@ -54,7 +54,7 @@ module Workato
           time = ::Time.strptime(self, format)
           form == :utc ? time.utc : time.getlocal
         else
-          super form
+          super(form)
         end
       end
 
@@ -98,7 +98,9 @@ module Workato
       end
 
       def +(other)
-        super(other&.to_s)
+        Kernel.raise Workato::Connector::Sdk::ArgumentError, 'Cannot concatenate string with nil' if other.nil?
+
+        super(other.to_s)
       end
 
       def to_hex
@@ -153,22 +155,30 @@ module Workato
       end
 
       def hmac_sha256(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('sha256')
         Types::Binary.new(::OpenSSL::HMAC.digest(digest, key, self))
       end
 
       def hmac_sha512(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('sha512')
         Types::Binary.new(::OpenSSL::HMAC.digest(digest, key, self))
       end
 
       def rsa_sha256(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('sha256')
         private_key = ::OpenSSL::PKey::RSA.new(key)
         Types::Binary.new(private_key.sign(digest, self))
       end
 
       def rsa_sha512(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('sha512')
         private_key = ::OpenSSL::PKey::RSA.new(key)
         Types::Binary.new(private_key.sign(digest, self))
@@ -185,17 +195,32 @@ module Workato
       end
 
       def hmac_sha1(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('sha1')
         Types::Binary.new(::OpenSSL::HMAC.digest(digest, key, self))
       end
 
       def hmac_md5(key)
+        assert_string_argument!(key, 'key')
+
         digest = ::OpenSSL::Digest.new('md5')
         Types::Binary.new(::OpenSSL::HMAC.digest(digest, key, self))
       end
 
       def from_xml
         Workato::Utilities::Xml.parse_xml_to_hash(self)
+      end
+
+      private
+
+      def assert_string_argument!(value, arg_name)
+        return if value.is_a?(String)
+
+        Kernel.raise(
+          Workato::Connector::Sdk::ArgumentError,
+          "Expected a String for '#{arg_name}' parameter, given #{value.class.name}"
+        )
       end
     end
   end

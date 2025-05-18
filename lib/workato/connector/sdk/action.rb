@@ -9,7 +9,7 @@ module Workato
     module Sdk
       class Action < Operation
         extend T::Sig
-        using BlockInvocationRefinements
+        using BlockInvocationRefinements # rubocop:disable Sorbet/Refinement core SDK feature
 
         include Dsl::ReinvokeAfter
 
@@ -70,7 +70,7 @@ module Workato
               extended_input_schema,
               extended_output_schema,
               next_continue,
-              &(block || action[:execute])
+              &block || action[:execute]
             )
           end
         rescue RequestFailedError => e

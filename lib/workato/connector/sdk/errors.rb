@@ -12,7 +12,22 @@ module Workato
 
       ArgumentError = Class.new(Error)
 
+      ArgumentEncodingError = Class.new(ArgumentError)
+
       InvalidDefinitionError = Class.new(Error)
+
+      InvalidURIError = Class.new(Error)
+
+      InvalidOutputError = Class.new(Error)
+
+      class InvalidTriggerPollOutputError < InvalidOutputError
+        attr_reader :sdk_reference
+
+        def initialize
+          @sdk_reference = 'https://docs.workato.com/developing-connectors/sdk/sdk-reference/triggers.html#poll'
+          super("Invalid output from trigger poll lambda.\nSee SDK documentation: #{@sdk_reference}")
+        end
+      end
 
       class UnexpectedMethodDefinitionError < InvalidDefinitionError
         attr_reader :name
