@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'activesupport', '>= 5.2', '< 7.0'
   spec.add_runtime_dependency 'aws-sigv4', '= 1.2.4'
   spec.add_runtime_dependency 'bundler', '~> 2.0'
-  spec.add_runtime_dependency 'charlock_holmes', '= 0.7.7'
+  spec.add_runtime_dependency 'charlock_holmes', '= 0.7.9'
   spec.add_runtime_dependency 'em-http-request', '~> 1.0'
   spec.add_runtime_dependency 'gyoku', '= 1.3.1'
   spec.add_runtime_dependency 'i18n', '>= 0.9.5', '< 2.0'
