@@ -77,7 +77,7 @@ module Workato
 
       def build_package
         ::Dir::Tmpname.create(['connector', '.zip']) do |path|
-          ::Zip::File.open(path, ::Zip::File::CREATE) do |archive|
+          ::Zip::File.open(path, create: true) do |archive|
             add_connector(archive)
             add_manifest(archive)
             add_logo(archive)
